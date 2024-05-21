@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Demo"
 include(":app")
+include(":baselineprofile")
