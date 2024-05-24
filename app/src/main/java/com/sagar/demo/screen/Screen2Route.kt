@@ -1,6 +1,9 @@
 package com.sagar.demo.screen
 
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -30,25 +33,24 @@ import kotlinx.serialization.Serializable
 
 
 fun NavGraphBuilder.screen2Route(onBack: () -> Unit) {
-    composable<Screen2Route> {
-        val data = it.toRoute<Screen2Route>()
-        Screen2(
-            data
-        ) {
-            onBack()
-        }
-    }
+
 }
 
 @Serializable
 data class Screen2Route(
     @DrawableRes val redId: Int,
-    val name: String
+    val name: String,
+    val resKey: String,
+    val nameKey: String
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
-fun Screen2(data: Screen2Route, onClick: () -> Unit) {
+fun SharedTransitionScope.Screen2(
+    animatedVisibilityScope: AnimatedVisibilityScope,
+    data: Screen2Route,
+    onClick: () -> Unit
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -85,6 +87,10 @@ fun Screen2(data: Screen2Route, onClick: () -> Unit) {
             ) {
                 Image(
                     modifier = Modifier
+                        .sharedBounds(
+                            sharedContentState = rememberSharedContentState(key = data.resKey),
+                            animatedVisibilityScope = animatedVisibilityScope
+                        )
                         .size(150.dp)
                         .clip(CircleShape),
                     painter = painterResource(id = data.redId),
@@ -92,6 +98,11 @@ fun Screen2(data: Screen2Route, onClick: () -> Unit) {
                 )
 
                 Text(
+                    modifier = Modifier
+                        .sharedBounds(
+                            sharedContentState = rememberSharedContentState(key = data.nameKey),
+                            animatedVisibilityScope = animatedVisibilityScope
+                        ),
                     text = data.name,
                     style = MaterialTheme.typography.headlineLarge
                 )
