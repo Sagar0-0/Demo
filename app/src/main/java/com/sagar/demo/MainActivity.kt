@@ -2,22 +2,33 @@ package com.sagar.demo
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Button
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffold
+import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
+import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import androidx.navigation.toRoute
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import com.sagar.demo.ui.theme.DemoTheme
-import kotlinx.serialization.Serializable
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,78 +36,111 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             DemoTheme {
-                val navController = rememberNavController()
-                NavHost(
-                    navController = navController,
-                    startDestination = Screen1Route
-                ) {
-                    composable<Screen1Route> {
-                        Screen1 {
-                            navController.navigate(
-                                Screen2Route(
-                                    "123//",
-                                    name = "Sagar//",
-                                    list = listOf("a","b","c")
-                                )
-                            )
-                        }
-                    }
-
-                    composable<Screen2Route> {
-                        val data = it.toRoute<Screen2Route>()
-                        Screen2(
-                            data
-                        ) {
-                            navController.popBackStack()
-                        }
-                    }
+                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    ListDetailLayout(
+                        modifier = Modifier.padding(innerPadding)
+                    )
                 }
             }
         }
     }
 }
 
-@Serializable
-object Screen1Route
+
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
-fun Screen1(onClick: () -> Unit) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize()
+fun ListDetailLayout(modifier: Modifier = Modifier) {
+    val navigator = rememberListDetailPaneScaffoldNavigator<String>()
+    ListDetailPaneScaffold(
+        modifier = modifier,
+        directive = navigator.scaffoldDirective,
+        value = navigator.scaffoldValue,
+        listPane = {
+            MainPane {
+                navigator.navigateTo(
+                    pane = ListDetailPaneScaffoldRole.Detail,
+                    content = it
+                )
+            }
+        },
+        detailPane = {
+            val id = navigator.currentDestination?.content
+            DetailPane(id) {
+                navigator.navigateTo(
+                    pane = ListDetailPaneScaffoldRole.Extra,
+                    content = id
+                )
+            }
+        },
+        extraPane = {
+            val id = navigator.currentDestination?.content
+            if (id != null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.tertiaryContainer),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "Profile Pane of UserID: $id")
+                }
+            }
+        }
+    )
+
+    BackHandler(navigator.canNavigateBack()) {
+        navigator.navigateBack()
+    }
+}
+
+@Composable
+fun MainPane(onClick: (String) -> Unit) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize(),
+        contentPadding = PaddingValues(16.dp)
     ) {
-        Button(
-            onClick = onClick
-        ) {
-            Text(text = "Navigate to Screen 2")
+        items(50) {
+            Text(
+                "UserId $it",
+                modifier = Modifier
+                    .fillParentMaxWidth()
+                    .clickable {
+                        onClick(it.toString())
+                    }
+                    .padding(16.dp)
+            )
         }
     }
 }
 
-@Serializable
-data class Screen2Route(
-    val id: String,
-    val name: String? = null,
-    val list : List<String>
-)
-
 @Composable
-fun Screen2(data: Screen2Route,onClick: () -> Unit) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Column {
-            Text(text = data.id)
-            Text(text = data.name ?: "")
-            data.list.forEach {
-                Text(text = it)
-            }
-            Button(
-                onClick = onClick
+fun DetailPane(id: String?, onClick: () -> Unit) {
+    Crossfade(targetState = id, label = "") {
+        if (it == null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Cyan),
+                contentAlignment = Alignment.Center
             ) {
-                Text(text = "Navigate back")
+                Text(text = "Select Any User")
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Cyan),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(text = "Detail of UserID: $it")
+                AssistChip(
+                    onClick = onClick,
+                    label = {
+                        Text(text = "Profile of User")
+                    }
+                )
             }
         }
-
     }
 }
