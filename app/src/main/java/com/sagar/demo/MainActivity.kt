@@ -1,102 +1,79 @@
 package com.sagar.demo
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import androidx.navigation.toRoute
-import com.sagar.demo.ui.theme.DemoTheme
-import kotlinx.serialization.Serializable
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            DemoTheme {
-                val navController = rememberNavController()
-                NavHost(
-                    navController = navController,
-                    startDestination = Screen1Route
-                ) {
-                    composable<Screen1Route> {
-                        Screen1 {
-                            navController.navigate(
-                                Screen2Route(
-                                    "123//",
-                                    name = "Sagar//",
-                                    list = listOf("a","b","c")
-                                )
-                            )
-                        }
-                    }
+        val liveData = MutableLiveData<List<Int>>()
+        liveData.observe(this) {
+            it.map {  }.reduce { acc,
+                                 unit ->  }
+        }
+        GlobalScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
 
-                    composable<Screen2Route> {
-                        val data = it.toRoute<Screen2Route>()
-                        Screen2(
-                            data
-                        ) {
-                            navController.popBackStack()
-                        }
-                    }
+            }
+            val flow = produceStateFlow()
+            launch {
+                flow.collect {
+                    Log.d("TAG", "First collector, value = $it")
+                }
+            }
+            delay(6000)
+            launch {
+                flow.collect {
+                    Log.e("TAG", "Second collector, value = $it")
                 }
             }
         }
     }
 }
 
-@Serializable
-object Screen1Route
-@Composable
-fun Screen1(onClick: () -> Unit) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Button(
-            onClick = onClick
-        ) {
-            Text(text = "Navigate to Screen 2")
+private fun produceFlow(): Flow<Int> {
+    return flow {
+        repeat(5) { i ->
+            emit(i)
+            delay(1000)
         }
     }
 }
 
-@Serializable
-data class Screen2Route(
-    val id: String,
-    val name: String? = null,
-    val list : List<String>
-)
-
-@Composable
-fun Screen2(data: Screen2Route,onClick: () -> Unit) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Column {
-            Text(text = data.id)
-            Text(text = data.name ?: "")
-            data.list.forEach {
-                Text(text = it)
-            }
-            Button(
-                onClick = onClick
-            ) {
-                Text(text = "Navigate back")
-            }
+private fun produceStateFlow(): StateFlow<Int> {
+    val stateFlow = MutableStateFlow(0)
+    GlobalScope.launch {
+        repeat(5) { i ->
+            stateFlow.update { i }
+            delay(1000)
         }
-
     }
+    return stateFlow
+}
+
+private fun produceSharedFlow(): SharedFlow<Int> {
+    val sharedFlow = MutableSharedFlow<Int>()
+    GlobalScope.launch {
+        repeat(5) { i ->
+            sharedFlow.emit(i)
+            delay(1000)
+        }
+    }
+    return sharedFlow
 }
