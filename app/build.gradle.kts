@@ -3,16 +3,22 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.compose.compiler)
     kotlin("plugin.serialization") version "1.9.24"
+
+    id("kotlin-parcelize")
 }
 
 android {
     namespace = "com.sagar.demo"
+
+
     compileSdk = 34
 
     defaultConfig {
         applicationId = "com.sagar.demo"
+
         minSdk = 24
         targetSdk = 34
+
         versionCode = 1
         versionName = "1.0"
 
