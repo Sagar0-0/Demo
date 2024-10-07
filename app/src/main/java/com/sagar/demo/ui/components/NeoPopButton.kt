@@ -65,6 +65,7 @@ private fun Preview() {
     }
 }
 
+
 @Composable
 fun NeoPopButton(
     modifier: Modifier = Modifier,
@@ -86,9 +87,9 @@ fun NeoPopButton(
         targetValue = if (pressed) buttonDropHeight else 0.dp, label = ""
     )
 
-    val sideHeight by animateDpAsState(
-        targetValue = if (pressed) 0.dp else buttonDropHeight, label = ""
-    )
+    val sideHeight = remember(offset) {
+        buttonDropHeight - offset
+    }
 
     Box(
         modifier = Modifier
@@ -103,33 +104,37 @@ fun NeoPopButton(
             }
             .drawWithCache {
                 onDrawWithContent {
-                    //Box
+                    val offsetAsPx = offset.toPx()
+                    val buttonWidthAsPx = buttonWidth.toPx()
+                    val buttonHeightAsPx = buttonHeight.toPx()
+
+                    //Button
                     drawRect(
                         color = buttonColor,
-                        topLeft = Offset(x = offset.toPx(), y = offset.toPx()),
-                        size = Size(width = buttonWidth.toPx(), height = buttonHeight.toPx()),
+                        topLeft = Offset(x = offsetAsPx, y = offsetAsPx),
+                        size = Size(width = buttonWidthAsPx, height = buttonHeightAsPx),
                     )
                     //Stroke
                     drawRect(
                         color = buttonStrokeColor,
-                        topLeft = Offset(x = offset.toPx(), y = offset.toPx()),
-                        size = Size(width = buttonWidth.toPx(), height = buttonHeight.toPx()),
+                        topLeft = Offset(x = offsetAsPx, y = offsetAsPx),
+                        size = Size(width = buttonWidthAsPx, height = buttonHeightAsPx),
                         style = Stroke(buttonStrokeWidth.toPx())
                     )
 
                     val rightPath = Path()
-                    rightPath.moveTo(x = offset.toPx() + buttonWidth.toPx(), y = offset.toPx())
+                    rightPath.moveTo(x = offsetAsPx + buttonWidthAsPx, y = offsetAsPx)
                     rightPath.lineTo(
-                        x = offset.toPx() + buttonWidth.toPx() + sideHeight.toPx(),
-                        y = offset.toPx() + sideHeight.toPx()
+                        x = offsetAsPx + buttonWidthAsPx + sideHeight.toPx(),
+                        y = offsetAsPx + sideHeight.toPx()
                     )
                     rightPath.lineTo(
-                        x = buttonWidth.toPx() + offset.toPx() + sideHeight.toPx(),
-                        y = buttonHeight.toPx() + offset.toPx() + sideHeight.toPx()
+                        x = buttonWidthAsPx + offsetAsPx + sideHeight.toPx(),
+                        y = buttonHeightAsPx + offsetAsPx + sideHeight.toPx()
                     )
                     rightPath.lineTo(
-                        x = buttonWidth.toPx() + offset.toPx(),
-                        y = buttonHeight.toPx() + offset.toPx()
+                        x = buttonWidthAsPx + offsetAsPx,
+                        y = buttonHeightAsPx + offsetAsPx
                     )
                     rightPath.close()
                     drawPath(
@@ -138,18 +143,18 @@ fun NeoPopButton(
 
 
                     val bottomPath = Path()
-                    bottomPath.moveTo(x = offset.toPx(), y = offset.toPx() + buttonHeight.toPx())
+                    bottomPath.moveTo(x = offsetAsPx, y = offsetAsPx + buttonHeightAsPx)
                     bottomPath.lineTo(
-                        x = offset.toPx() + sideHeight.toPx(),
-                        y = offset.toPx() + buttonHeight.toPx() + sideHeight.toPx()
+                        x = offsetAsPx + sideHeight.toPx(),
+                        y = offsetAsPx + buttonHeightAsPx + sideHeight.toPx()
                     )
                     bottomPath.lineTo(
-                        x = buttonWidth.toPx() + offset.toPx() + sideHeight.toPx(),
-                        y = buttonHeight.toPx() + offset.toPx() + sideHeight.toPx()
+                        x = buttonWidthAsPx + offsetAsPx + sideHeight.toPx(),
+                        y = buttonHeightAsPx + offsetAsPx + sideHeight.toPx()
                     )
                     bottomPath.lineTo(
-                        x = buttonWidth.toPx() + offset.toPx(),
-                        y = buttonHeight.toPx() + offset.toPx()
+                        x = buttonWidthAsPx + offsetAsPx,
+                        y = buttonHeightAsPx + offsetAsPx
                     )
                     bottomPath.close()
                     drawPath(
@@ -167,7 +172,14 @@ fun NeoPopButton(
             modifier = Modifier
                 .wrapContentSize()
                 .offset {
-                    IntOffset(x = offset.toPx().toInt(), y = offset.toPx().toInt())
+                    IntOffset(
+                        x = offset
+                            .toPx()
+                            .toInt(),
+                        y = offset
+                            .toPx()
+                            .toInt()
+                    )
                 }
         ) {
             content()
