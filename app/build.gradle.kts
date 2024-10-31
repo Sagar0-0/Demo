@@ -68,6 +68,10 @@ dependencies {
 
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.navigation.compose)
+
+    val billing_version = "7.1.1"
+
+    implementation(libs.billing.ktx)
 }
 
 composeCompiler {

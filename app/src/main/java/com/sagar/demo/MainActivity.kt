@@ -23,6 +23,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
         setContent {
             DemoTheme {
                 val navController = rememberNavController()
@@ -31,15 +32,7 @@ class MainActivity : ComponentActivity() {
                     startDestination = Screen1Route
                 ) {
                     composable<Screen1Route> {
-                        Screen1 {
-                            navController.navigate(
-                                Screen2Route(
-                                    "123//",
-                                    name = "Sagar//",
-                                    list = listOf("a","b","c")
-                                )
-                            )
-                        }
+                        Screen1()
                     }
 
                     composable<Screen2Route> {
@@ -52,22 +45,6 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
-        }
-    }
-}
-
-@Serializable
-object Screen1Route
-@Composable
-fun Screen1(onClick: () -> Unit) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Button(
-            onClick = onClick
-        ) {
-            Text(text = "Navigate to Screen 2")
         }
     }
 }
