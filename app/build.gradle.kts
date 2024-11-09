@@ -1,8 +1,18 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.compose.compiler)
     kotlin("plugin.serialization") version "1.9.24"
+}
+
+val localProps = Properties()
+val localPropertiesFile = File(rootProject.rootDir,"sagar.properties")
+if (localPropertiesFile.exists() && localPropertiesFile.isFile) {
+    localPropertiesFile.inputStream().use {
+        localProps.load(it)
+    }
 }
 
 android {
@@ -29,6 +39,11 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            buildConfigField("String", "API_KEY", localProps.getProperty("API_KEY_PROD"))
+        }
+
+        debug {
+            buildConfigField("String", "API_KEY", localProps.getProperty("API_KEY"))
         }
     }
     compileOptions {
@@ -40,6 +55,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     packaging {
         resources {

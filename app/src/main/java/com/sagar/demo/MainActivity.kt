@@ -25,6 +25,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             DemoTheme {
+
+                BuildConfig.API_KEY
+
                 val navController = rememberNavController()
                 NavHost(
                     navController = navController,
