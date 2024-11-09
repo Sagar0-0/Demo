@@ -1,6 +1,7 @@
 package com.sagar.demo
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -18,11 +19,21 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.sagar.demo.ui.theme.DemoTheme
 import kotlinx.serialization.Serializable
+import kotlin.math.log
 
 class MainActivity : ComponentActivity() {
+    companion object {
+        init {
+            System.loadLibrary("native-lib")// Load the library
+        }
+    }
+    private external fun getApiKey(id: Int): String
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        Log.e("TAG", "onCreate: ${getApiKey(1)}")
         setContent {
             DemoTheme {
                 val navController = rememberNavController()

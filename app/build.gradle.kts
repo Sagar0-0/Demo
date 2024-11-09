@@ -46,6 +46,14 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
+    externalNativeBuild {
+        cmake {
+            path = File("cpp","CMakeLists.txt")
+            version = "3.30.5"
+        }
+    }
+    ndkVersion = "28.0.12433566"
 }
 
 dependencies {
