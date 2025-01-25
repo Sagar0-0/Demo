@@ -1,9 +1,9 @@
 package com.sagar.demo
 
-import android.util.Log
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.Observer
 
 class MyLiveData<T>(initialValue: T) {
     var value: T = initialValue
@@ -12,37 +12,44 @@ class MyLiveData<T>(initialValue: T) {
             notifyAllObservers()
         }
 
-    private val observers: MutableMap<MyLifecycleEventObserver, (T) -> Unit> = mutableMapOf()
+    private val observers: MutableMap<Observer<T>, MyLifecycleEventObserver> = mutableMapOf()
 
-    fun observe(owner: LifecycleOwner, observer: (T) -> Unit) {
-        observer(value)
-        val lifecycleObserver = MyLifecycleEventObserver(owner)
+    fun observe(owner: LifecycleOwner, observer: Observer<T>) {
+        observer.onChanged(value)
+        val lifecycleObserver = MyLifecycleEventObserver(owner, observer)
+        observers[observer] = lifecycleObserver
         owner.lifecycle.addObserver(lifecycleObserver)
-        observers[lifecycleObserver] = observer
     }
 
     private fun notifyAllObservers() {
         observers.forEach { entry ->
-            entry.value.invoke(value)
+            if (entry.value.isActive()) {
+                entry.key.onChanged(value)
+            }
         }
     }
 
-    private fun removeObserver(lifecycleObserver: MyLifecycleEventObserver) {
-        observers.remove(lifecycleObserver)
-        lifecycleObserver.removeLifecycleObserver()
+    private fun removeObserver(observer: Observer<T>) {
+        observers.remove(observer)
     }
 
-    inner class MyLifecycleEventObserver(private val owner: LifecycleOwner) : LifecycleEventObserver {
+    inner class MyLifecycleEventObserver(
+        private val owner: LifecycleOwner, private val observer: Observer<T>
+    ) : LifecycleEventObserver {
         override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
-            val currentState = owner.lifecycle.currentState
-            if(currentState==Lifecycle.State.DESTROYED) {
-                Log.e("MyLiveData", "onStateChanged: removing our oberver")
-                removeObserver(this)
+            val currentState = source.lifecycle.currentState
+            if (currentState == Lifecycle.State.DESTROYED) {
+                removeObserver(observer)
+                removeLifecycleObserver(source)
             }
         }
 
-        fun removeLifecycleObserver() {
+        private fun removeLifecycleObserver(owner: LifecycleOwner) {
             owner.lifecycle.removeObserver(this)
+        }
+
+        fun isActive(): Boolean {
+            return owner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)
         }
     }
 }
